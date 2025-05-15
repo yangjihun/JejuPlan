@@ -9,7 +9,7 @@ const NavBar = () => {
       <div className="flex items-center space-x-2">
         <MapPin className="text-jeju-purple w-6 h-6" />
         <span className="text-xl font-bold bg-clip-text text-transparent bg-jeju-gradient">
-          제주 플래너
+          JejuPlan
         </span>
       </div>
 
