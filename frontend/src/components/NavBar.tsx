@@ -2,15 +2,23 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, MapPin, Menu } from "lucide-react";
+import GradientText from '@/components/ui/GradientText';
 
 const NavBar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 py-4 px-6 md:px-12 flex justify-between items-center glass">
       <div className="flex items-center space-x-2">
-        <MapPin className="text-jeju-purple w-6 h-6" />
-        <span className="text-xl font-bold bg-clip-text text-transparent bg-jeju-gradient">
-          JejuPlan
-        </span>
+        <a href="#" className="flex items-center space-x-2 text-xl font-bold bg-clip-text text-transparent bg-jeju-gradient  transition-colors hover:text-jeju-purple flex items-center gap-2">
+          <MapPin className="w-6 h-6 text-jeju-purple" />
+          <GradientText
+            colors={["#8B5CF6", "#4079ff", "#8B5CF6", "#4079ff", "#8B5CF6"]}
+            animationSpeed={2}
+            showBorder={false}
+            className="custom-class"
+          >
+            JejuPlan
+          </GradientText>
+        </a>
       </div>
 
       <div className="hidden md:flex items-center space-x-8">
