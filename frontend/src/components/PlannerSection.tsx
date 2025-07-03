@@ -1,23 +1,28 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarDays, Clock, MapPin, Plus } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, Plus, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const PlannerSection = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [plans, setPlans] = useState<string[]>([]);
   const [newPlan, setNewPlan] = useState('');
+  const navigate = useNavigate();
 
   const addPlan = () => {
     if (newPlan.trim()) {
       setPlans([...plans, newPlan]);
       setNewPlan('');
     }
+  };
+
+  const goToPlanner = () => {
+    navigate('/planner');
   };
 
   return (
@@ -93,9 +98,20 @@ const PlannerSection = () => {
           </div>
           
           <div className="glass p-6 animate-fade-in">
-            <h3 className="text-xl font-medium mb-4">
-              {date ? format(date, "yyyy년 MM월 dd일") : "날짜"} 여행 계획
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-medium">
+                {date ? format(date, "yyyy년 MM월 dd일") : "날짜"} 여행 계획
+              </h3>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={goToPlanner}
+                className="bg-jeju-gradient text-white border-none hover:opacity-90"
+              >
+                상세 플래너
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
             
             {plans.length > 0 ? (
               <ul className="space-y-3">
@@ -120,6 +136,14 @@ const PlannerSection = () => {
                 <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p>아직 계획된 일정이 없습니다.</p>
                 <p className="text-sm">왼쪽에서 장소를 추가해 보세요!</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4 bg-jeju-gradient text-white border-none hover:opacity-90"
+                  onClick={goToPlanner}
+                >
+                  상세 플래너로 이동
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
             )}
           </div>

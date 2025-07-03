@@ -1,9 +1,12 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
-const Hero = () => {
+interface HeroProps {
+  onGetStarted?: () => void;
+}
+
+const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   return (
     <div className="relative min-h-[92vh] flex flex-col justify-center items-center text-center px-6 overflow-hidden">
       {/* Background gradient effects */}
@@ -20,10 +23,19 @@ const Hero = () => {
           경험할 수 있는 최적의 일정을 만들어 드립니다.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button size="lg" className="w-full sm:w-auto bg-jeju-gradient hover:opacity-90">
-            일정 만들기 <ArrowRight className="ml-2 h-4 w-4" />
+          <Button 
+            size="lg" 
+            className="w-full sm:w-auto bg-jeju-gradient hover:opacity-90"
+            onClick={onGetStarted}
+          >
+            여행 계획 시작하기 <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
-          <Button variant="outline" size="lg" className="w-full sm:w-auto">
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="w-full sm:w-auto"
+            onClick={() => document.getElementById('destinations')?.scrollIntoView({ behavior: 'smooth' })}
+          >
             여행지 둘러보기
           </Button>
         </div>
