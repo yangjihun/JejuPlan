@@ -138,7 +138,8 @@ const StatsSidebar: React.FC<StatsSidebarProps> = ({
             </CardTitle>
             <p className="text-xs text-muted-foreground">
               {format(selectedPlan.startDate, 'MM.dd', { locale: ko })} - {format(selectedPlan.endDate, 'MM.dd', { locale: ko })} 
-              ({eachDayOfInterval({ start: selectedPlan.startDate, end: selectedPlan.endDate }).length}일)
+              ({eachDayOfInterval({ start: selectedPlan.startDate, end: selectedPlan.endDate }).length - 1}박
+              {eachDayOfInterval({ start: selectedPlan.startDate, end: selectedPlan.endDate }).length}일)
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -173,37 +174,6 @@ const StatsSidebar: React.FC<StatsSidebarProps> = ({
                   </div>
                 );
               })}
-            </div>
-            
-            {/* 범례 */}
-            <div className="space-y-2">
-              <div className="text-xs font-medium text-muted-foreground mb-1">상태별 색상</div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                                 <div className="flex items-center gap-1.5">
-                   <div className="w-2.5 h-2.5 rounded-full bg-gray-500"></div>
-                   <span className="text-muted-foreground">지난 날짜</span>
-                 </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400 ring-1 ring-amber-200"></div>
-                  <span className="text-muted-foreground">오늘</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-jeju-blue to-sky-400"></div>
-                  <span className="text-muted-foreground">1개 일정</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-jeju-purple to-purple-500"></div>
-                  <span className="text-muted-foreground">2개 일정</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-pink-500"></div>
-                  <span className="text-muted-foreground">3개+ 일정</span>
-                </div>
-                                 <div className="flex items-center gap-1.5">
-                   <div className="w-2.5 h-2.5 rounded-full bg-slate-700 border border-slate-600"></div>
-                   <span className="text-muted-foreground">일정 없음</span>
-                 </div>
-              </div>
             </div>
           </CardContent>
         </Card>
