@@ -5,6 +5,9 @@ import PlannerControls from './PlannerControls';
 import PlanList from './PlanList';
 import StatsSidebar from './StatsSidebar';
 import EditItemDialog from './EditItemDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import { BarChart3, X } from 'lucide-react';
 
 interface PlannerSectionProps {
   selectedPlan?: TravelPlan | null;
@@ -17,10 +20,12 @@ const PlannerSection: React.FC<PlannerSectionProps> = ({
   onUpdatePlan,
   onClose,
 }) => {
+  const isMobile = useIsMobile();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [plans, setPlans] = useState<PlanItem[]>([]);
   const [editingPlan, setEditingPlan] = useState<PlanItem | null>(null);
   const [isAddingPlan, setIsAddingPlan] = useState(false);
+  const [isStatsSidebarOpen, setIsStatsSidebarOpen] = useState(false);
   const [newPlan, setNewPlan] = useState<NewPlanData>({
     title: '',
     location: '',
@@ -158,16 +163,13 @@ const PlannerSection: React.FC<PlannerSectionProps> = ({
 
   return (
     <div id="planner" className="h-full flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto px-6 md:px-12 py-6 relative">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-12 py-4 md:py-6 relative">
         {/* Background effects */}
         <div className="absolute top-1/3 right-0 w-80 h-80 bg-jeju-purple/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-10 w-80 h-80 bg-jeju-blue/10 rounded-full blur-3xl"></div>
         
         <div className="relative z-10">
-          <div className="mb-6 text-center animate-fade-in">
-          </div>
-
-          <div className="max-w-7xl mx-auto space-y-8">
+          <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
             {/* 상단 컨트롤 */}
             <PlannerControls
               selectedDate={selectedDate}
@@ -186,9 +188,49 @@ const PlannerSection: React.FC<PlannerSectionProps> = ({
             />
 
             {/* 메인 컨텐츠 */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* 일정 목록 */}
-              <div className="lg:col-span-2">
+            {isMobile ? (
+              <div className="space-y-6">
+                {/* 모바일: 스택 레이아웃 */}
+                <div className="space-y-4">
+                  {/* 통계 토글 버튼 */}
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsStatsSidebarOpen(!isStatsSidebarOpen)}
+                    className="w-full h-12 justify-between"
+                  >
+                    <div className="flex items-center">
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      통계 보기
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {plans.filter(p => p.isCompleted).length}/{plans.length}
+                    </span>
+                  </Button>
+
+                  {/* 접이식 통계 */}
+                  {isStatsSidebarOpen && (
+                    <div className="bg-background/50 backdrop-blur-sm border border-white/10 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold">통계</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsStatsSidebarOpen(false)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <StatsSidebar
+                        plans={plans}
+                        selectedDate={selectedDate}
+                        onDateSelect={handleTimelineeDateSelect}
+                        selectedPlan={selectedPlan}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* 일정 목록 */}
                 <PlanList
                   plans={plans}
                   onToggleComplete={toggleComplete}
@@ -197,26 +239,47 @@ const PlannerSection: React.FC<PlannerSectionProps> = ({
                   onReorder={reorderPlans}
                 />
               </div>
+            ) : (
+              // 데스크톱: 그리드 레이아웃
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* 일정 목록 */}
+                <div className="lg:col-span-2">
+                  <PlanList
+                    plans={plans}
+                    onToggleComplete={toggleComplete}
+                    onEdit={setEditingPlan}
+                    onDelete={deletePlan}
+                    onReorder={reorderPlans}
+                  />
+                </div>
 
-              {/* 사이드바 - 통계 및 필터 */}
-              <StatsSidebar 
-                plans={plans} 
-                selectedPlan={selectedPlan}
-                selectedDate={selectedDate}
-                onDateSelect={handleTimelineeDateSelect}
-              />
-            </div>
+                {/* 통계 사이드바 */}
+                <div className="lg:col-span-1">
+                  <StatsSidebar
+                    plans={plans}
+                    selectedDate={selectedDate}
+                    onDateSelect={handleTimelineeDateSelect}
+                    selectedPlan={selectedPlan}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* 일정 편집 다이얼로그 */}
-      <EditItemDialog
-        plan={editingPlan}
-        isOpen={!!editingPlan}
-        onOpenChange={(open) => !open && setEditingPlan(null)}
-        onSave={updatePlan}
-      />
+      {/* 편집 다이얼로그 */}
+      {editingPlan && (
+        <EditItemDialog
+          plan={editingPlan}
+          isOpen={!!editingPlan}
+          onOpenChange={(open) => !open && setEditingPlan(null)}
+          onSave={(id, updates) => {
+            updatePlan(id, updates);
+            setEditingPlan(null);
+          }}
+        />
+      )}
     </div>
   );
 };

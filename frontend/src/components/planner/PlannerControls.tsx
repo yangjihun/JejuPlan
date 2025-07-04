@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PlanItem } from './types';
 import AddPlanDialog from './AddPlanDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import { TravelPlan } from './types';
 
@@ -50,6 +51,7 @@ const PlannerControls: React.FC<PlannerControlsProps> = ({
   selectedPlan,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
   const completedCount = plans.filter(p => p.isCompleted).length;
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,13 +88,56 @@ const PlannerControls: React.FC<PlannerControlsProps> = ({
     }
   };
 
+  const ControlButton = ({ 
+    onClick, 
+    icon: Icon, 
+    tooltip, 
+    children 
+  }: { 
+    onClick: () => void;
+    icon: React.ComponentType<{ className?: string }>;
+    tooltip: string;
+    children?: React.ReactNode;
+  }) => {
+    const buttonContent = (
+      <Button 
+        variant="outline" 
+        size={isMobile ? "default" : "sm"} 
+        onClick={onClick}
+        className={isMobile ? "min-h-[44px] px-4" : ""}
+      >
+        <Icon className="h-4 w-4" />
+        {isMobile && children && <span className="ml-2">{children}</span>}
+      </Button>
+    );
+
+    if (isMobile) {
+      return buttonContent;
+    }
+
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {buttonContent}
+          </TooltipTrigger>
+          <TooltipContent>{tooltip}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
   return (
-    <div className="glass p-6 mb-8 animate-fade-in">
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="flex items-center gap-4">
+    <div className="glass mt-[72px] p-4 md:p-6 mb-6 md:mb-8 animate-fade-in border-2 border-white/10">
+      <div className="flex flex-col gap-4">
+        {/* 상단: 날짜 선택과 통계 */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="bg-secondary/50 border-white/10">
+              <Button 
+                variant="outline" 
+                className={`bg-secondary/50 border-white/10 justify-start ${isMobile ? 'min-h-[44px]' : ''}`}
+              >
                 <CalendarDays className="mr-2 h-4 w-4" />
                 {format(selectedDate, 'yyyy년 MM월 dd일', { locale: ko })}
               </Button>
@@ -113,72 +158,68 @@ const PlannerControls: React.FC<PlannerControlsProps> = ({
             </PopoverContent>
           </Popover>
           
-          <Badge variant="secondary" className="text-sm">
-            총 {plans.length}개 일정
-          </Badge>
-          
-          <Badge variant="outline" className="text-sm">
-            완료: {completedCount}개
-          </Badge>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="secondary" className={`text-sm ${isMobile ? 'px-3 py-1' : ''}`}>
+              총 {plans.length}개 일정
+            </Badge>
+            
+            <Badge variant="outline" className={`text-sm ${isMobile ? 'px-3 py-1' : ''}`}>
+              완료: {completedCount}개
+            </Badge>
+          </div>
         </div>
 
-        <div className="flex gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" onClick={onSave}>
-                  <Save className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>일정 저장</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" onClick={onLoad}>
-                  <Upload className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>일정 불러오기</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => fileInputRef.current?.click()}
+        {/* 하단: 액션 버튼들 */}
+        <div className={`flex gap-2 ${isMobile ? 'flex-col sm:flex-row' : ''}`}>
+          {/* 모바일에서는 텍스트와 함께 표시되는 버튼들 */}
+          {isMobile ? (
+            <>
+              <div className="flex gap-2">
+                <ControlButton onClick={onSave} icon={Save} tooltip="일정 저장">
+                  저장
+                </ControlButton>
+                <ControlButton onClick={onLoad} icon={Upload} tooltip="일정 불러오기">
+                  불러오기
+                </ControlButton>
+              </div>
+              <div className="flex gap-2">
+                <ControlButton 
+                  onClick={() => fileInputRef.current?.click()} 
+                  icon={Upload} 
+                  tooltip="파일에서 불러오기"
                 >
-                  <Upload className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>파일에서 불러오기</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+                  파일 불러오기
+                </ControlButton>
+                <ControlButton onClick={onExport} icon={Download} tooltip="일정 내보내기">
+                  내보내기
+                </ControlButton>
+              </div>
+            </>
+          ) : (
+            // 데스크톱에서는 아이콘만 표시
+            <>
+              <ControlButton onClick={onSave} icon={Save} tooltip="일정 저장" />
+              <ControlButton onClick={onLoad} icon={Upload} tooltip="일정 불러오기" />
+              <ControlButton 
+                onClick={() => fileInputRef.current?.click()} 
+                icon={Upload} 
+                tooltip="파일에서 불러오기" 
+              />
+              <ControlButton onClick={onExport} icon={Download} tooltip="일정 내보내기" />
+            </>
+          )}
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" onClick={onExport}>
-                  <Download className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>일정 내보내기</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <AddPlanDialog
-            isOpen={isAddingPlan}
-            onOpenChange={onAddingPlanChange}
-            newPlan={newPlan}
-            onNewPlanChange={onNewPlanChange}
-            onAddPlan={onAddPlan}
-            selectedPlan={selectedPlan}
-          />
+          {/* 일정 추가 다이얼로그 */}
+          <div className={isMobile ? "mt-2" : ""}>
+            <AddPlanDialog
+              isOpen={isAddingPlan}
+              onOpenChange={onAddingPlanChange}
+              newPlan={newPlan}
+              onNewPlanChange={onNewPlanChange}
+              onAddPlan={onAddPlan}
+              selectedPlan={selectedPlan}
+            />
+          </div>
         </div>
       </div>
 

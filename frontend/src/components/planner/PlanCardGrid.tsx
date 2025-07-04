@@ -10,12 +10,14 @@ import {
   List,
   SortAsc,
   SortDesc,
-  Plus
+  Plus,
+  ChevronDown
 } from 'lucide-react';
 import { TravelPlan, NewTravelPlan } from './types';
 import PlanCard from './PlanCard';
 import EditPlanDialog from './EditPlanDialog';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PlanCardGridProps {
   plans: TravelPlan[];
@@ -32,12 +34,14 @@ const PlanCardGrid: React.FC<PlanCardGridProps> = ({
   onDuplicatePlan,
   onCreatePlan,
 }) => {
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [sortBy, setSortBy] = React.useState('createdAt');
   const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('desc');
   const [filterPublic, setFilterPublic] = React.useState<'all' | 'public' | 'private'>('all');
   const [viewMode, setViewMode] = React.useState<'grid' | 'list'>('grid');
   const [isCreatingPlan, setIsCreatingPlan] = React.useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = React.useState(false);
 
   // 필터링 및 정렬
   const filteredAndSortedPlans = React.useMemo(() => {
@@ -96,101 +100,196 @@ const PlanCardGrid: React.FC<PlanCardGridProps> = ({
   return (
     <div className="space-y-6">
       {/* 상단 컨트롤 */}
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-        <div className="flex items-center gap-2">
-          <EditPlanDialog
-            isOpen={isCreatingPlan}
-            onOpenChange={setIsCreatingPlan}
-            onCreate={onCreatePlan}
-            onSave={() => {}} // 생성 모드에서는 사용하지 않음
-            mode="create"
-            trigger={
-              <Button className="bg-jeju-gradient">
-                <Plus className="mr-2 h-4 w-4" /> 새 플랜 만들기
-              </Button>
-            }
-          />
-          <Badge variant="secondary" className="text-sm">
-            총 {plans.length}개 플랜
-          </Badge>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-          {/* 검색 */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="플랜 검색..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full sm:w-64"
+      <div className="space-y-4">
+        {/* 첫 번째 줄: 새 플랜 버튼과 통계 */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <EditPlanDialog
+              isOpen={isCreatingPlan}
+              onOpenChange={setIsCreatingPlan}
+              onCreate={onCreatePlan}
+              onSave={() => {}} // 생성 모드에서는 사용하지 않음
+              mode="create"
+              trigger={
+                <Button 
+                  className="bg-jeju-gradient" 
+                  size={isMobile ? "lg" : "default"}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> 새 플랜 만들기
+                </Button>
+              }
             />
+            <Badge variant="secondary" className={`text-sm ${isMobile ? 'px-3 py-1' : ''}`}>
+              총 {plans.length}개 플랜
+            </Badge>
           </div>
 
-          {/* 필터 */}
-          <Select value={filterPublic} onValueChange={(value: 'all' | 'public' | 'private') => setFilterPublic(value)}>
-            <SelectTrigger className="w-full sm:w-32">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">전체</SelectItem>
-              <SelectItem value="public">공개</SelectItem>
-              <SelectItem value="private">비공개</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* 정렬 */}
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="createdAt">생성일</SelectItem>
-              <SelectItem value="title">제목</SelectItem>
-              <SelectItem value="startDate">시작일</SelectItem>
-              <SelectItem value="completion">완료율</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* 정렬 순서 */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleSortOrder}
-            className="w-full sm:w-auto"
-          >
-            {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
-          </Button>
-
-          {/* 뷰 모드 */}
-          <div className="flex border rounded-md">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="rounded-r-none"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="rounded-l-none"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
+          {/* 뷰 모드 토글 (데스크톱만) */}
+          {!isMobile && (
+            <div className="flex border rounded-md">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="rounded-r-none"
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="rounded-l-none"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
+
+        {/* 두 번째 줄: 검색 */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="플랜 검색..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={`pl-10 ${isMobile ? 'h-12' : ''}`}
+          />
+        </div>
+
+        {/* 세 번째 줄: 필터 */}
+        {isMobile ? (
+          <div className="space-y-3">
+            <Button 
+              variant="outline" 
+              className="w-full justify-between h-12"
+              onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+            >
+              <div className="flex items-center">
+                <Filter className="h-4 w-4 mr-2" />
+                필터 및 정렬
+              </div>
+              <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersOpen ? 'rotate-180' : ''}`} />
+            </Button>
+            
+            {isFiltersOpen && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  {/* 필터 */}
+                  <Select value={filterPublic} onValueChange={(value: 'all' | 'public' | 'private') => setFilterPublic(value)}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="공개 설정" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">전체</SelectItem>
+                      <SelectItem value="public">공개</SelectItem>
+                      <SelectItem value="private">비공개</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* 정렬 */}
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="정렬 기준" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="createdAt">생성일</SelectItem>
+                      <SelectItem value="title">제목</SelectItem>
+                      <SelectItem value="startDate">시작일</SelectItem>
+                      <SelectItem value="completion">완료율</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex gap-3">
+                  {/* 정렬 순서 */}
+                  <Button
+                    variant="outline"
+                    onClick={toggleSortOrder}
+                    className="flex-1 h-12"
+                  >
+                    {sortOrder === 'asc' ? (
+                      <>
+                        <SortAsc className="h-4 w-4 mr-2" />
+                        오름차순
+                      </>
+                    ) : (
+                      <>
+                        <SortDesc className="h-4 w-4 mr-2" />
+                        내림차순
+                      </>
+                    )}
+                  </Button>
+
+                  {/* 뷰 모드 */}
+                  <Button
+                    variant="outline"
+                    onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                    className="flex-1 h-12"
+                  >
+                    {viewMode === 'grid' ? (
+                      <>
+                        <List className="h-4 w-4 mr-2" />
+                        목록 보기
+                      </>
+                    ) : (
+                      <>
+                        <Grid3X3 className="h-4 w-4 mr-2" />
+                        격자 보기
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex gap-2 items-center">
+            {/* 필터 */}
+            <Select value={filterPublic} onValueChange={(value: 'all' | 'public' | 'private') => setFilterPublic(value)}>
+              <SelectTrigger className="w-32">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체</SelectItem>
+                <SelectItem value="public">공개</SelectItem>
+                <SelectItem value="private">비공개</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* 정렬 */}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="createdAt">생성일</SelectItem>
+                <SelectItem value="title">제목</SelectItem>
+                <SelectItem value="startDate">시작일</SelectItem>
+                <SelectItem value="completion">완료율</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* 정렬 순서 */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleSortOrder}
+            >
+              {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* 플랜 카드 그리드 */}
       {filteredAndSortedPlans.length > 0 ? (
         <div className={cn(
-          "grid gap-6",
+          "grid gap-4 md:gap-6",
           viewMode === 'grid' 
-            ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
+            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
             : "grid-cols-1"
         )}>
           {filteredAndSortedPlans.map((plan) => (
@@ -205,22 +304,18 @@ const PlanCardGrid: React.FC<PlanCardGridProps> = ({
         </div>
       ) : (
         <div className="text-center py-12">
-          <div className="text-muted-foreground mb-4">
-            {searchTerm || filterPublic !== 'all' ? '검색 결과가 없습니다.' : '아직 플랜이 없습니다.'}
+          <div className="w-16 h-16 mx-auto mb-4 opacity-20">
+            <Grid3X3 className="w-full h-full" />
           </div>
-          {!searchTerm && filterPublic === 'all' && (
-            <EditPlanDialog
-              isOpen={isCreatingPlan}
-              onOpenChange={setIsCreatingPlan}
-              onCreate={onCreatePlan}
-              onSave={() => {}}
-              mode="create"
-              trigger={
-                <Button className="bg-jeju-gradient">
-                  <Plus className="mr-2 h-4 w-4" /> 첫 플랜 만들기
-                </Button>
-              }
-            />
+          <h3 className="text-lg font-medium mb-2">플랜이 없습니다</h3>
+          <p className="text-muted-foreground mb-6">
+            {searchTerm ? '검색 조건에 맞는 플랜이 없습니다' : '첫 번째 제주 여행 플랜을 만들어보세요'}
+          </p>
+          {!searchTerm && (
+            <Button onClick={() => setIsCreatingPlan(true)} className="bg-jeju-gradient">
+              <Plus className="mr-2 h-4 w-4" />
+              새 플랜 만들기
+            </Button>
           )}
         </div>
       )}
